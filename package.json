@@ -2,9 +2,9 @@
     "name": "sendbird_freshdesk_chat_webhook_server",
     "version": "0.1.0",
     "description": "A simple Node app built on fastify, instantly up and running.",
-    "main": "server.js",
+    "main": "main.js",
     "scripts": {
-        "start": "node server.js"
+        "start": "node main.js"
     },
     "dependencies": {
         "axios": "^1.4.0",
