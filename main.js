@@ -18,7 +18,7 @@ const requestListener = function (req, res) {
 
 const server = http.createServer(requestListener);
 
-fs.readFile(__dirname + "/homepage.html")
+fs.readFile(__dirname + "/index.html")
     .then(contents => {
         indexFile = contents;
         server.listen(port, host, () => {
