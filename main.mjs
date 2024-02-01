@@ -6,8 +6,9 @@
 import http from "http";
 import { promises as fs } from 'fs';
 import SendbirdChat from '@sendbird/chat';
-import SendBirdDesk from 'sendbird-desk';
-import Ticket from 'sendbird-desk';
+import SendBird from "sendbird";
+import SendBirdDesk, { Ticket } from 'sendbird-desk';
+import { GroupChannelModule } from '@sendbird/chat/groupChannel';
 import axios from "axios";
 import express from "express";
 import bodyParser from "body-parser";
@@ -16,6 +17,7 @@ const host = 'localhost';
 const port = 8000;
 import { fileURLToPath } from 'url';
 import path from 'path';
+import SendbirdDesk from "sendbird-desk";
 // const axios = require("axios");
 // const express = require("express");
 // const bodyParser = require("body-parser");
@@ -57,8 +59,9 @@ fs.readFile(currentModuleDir + "/index.html")
         indexFile = contents;
         server.listen(port, host, () => {
             console.log(`Server is running on http://${host}:${port}`);
+            console.log("here is the ok")
             createtickets();
-            testposthandoff();
+            //testposthandoff();
         });
     })
     .catch(err => {
@@ -73,11 +76,14 @@ app.post("/new_ticket_webhook", async (req, res) => {
    const data = req.body.data; // Extract data from request body
    const eventType = req.body.eventType; // Extract event type from request body
    // Check if the event type is 'TICKET.CREATED'
+   console.log(eventType)
+
+
    if (eventType === 'TICKET.CREATED') {
        const channelUrl = data.channelUrl; // Extract channel URL from data
-       const botId = "ticket_bot_1"; // Specify bot ID
+       const botId = "bot1"; // Specify bot ID
          // Invite bot to the channel
-        const sendInvite = await inviteBotToChannel(channelUrl, botId);
+      const sendInvite = await inviteBotToChannel(channelUrl, botId);
  }
  });
  async function inviteBotToChannel(channelUrl, botId) {
@@ -126,6 +132,7 @@ async function updateTicketStatus (channelUrl) {
            "SENDBIRDDESKAPITOKEN": SENDBIRDDESKAPITOKEN
          }
       })
+      console.log(ticket.data)
       console.log("test")
       const ticketId = ticket.data.results[0].id
       const ticketUpdate = await axios.patch(`https://desk-api-${APP_ID}.sendbird.com/platform/v1/tickets/${ticketId}`,{
@@ -173,56 +180,81 @@ async function updateTicketStatus (channelUrl) {
   function createtickets()
   {
     var ticketparam = {
-      title:"test 1",
+      title:"test 2",
       user : "939665",
       priority : "LOW",
-      related_channel_url : ["bot-channel-url"]
+      related_channel_url : ["bot-channel-url","sendbird_group_channel_414329462_bcc7edc1072c2665ea22d0d525bd8b35382a19e3"]
     }
-    axios.post("http://localhost:8000/new_ticket_webhook",ticketparam)
+    axios.post("http://localhost:8000/newticket",ticketparam)
     .then(response => {
-      console.log(response.data);
+      console.log(`narrow down ${response.data}`);
     })    
     .catch(error => {
       console.error(`this is the error newticket ${error.message}`);
     });
   }
   app.post("/newticket", async(req, res) => {
-    tickettitle = req.body.title;
-    username = req.body.user;
-    priority =req.body.priority;
-    relatedchannels = req.body.related_channel_url
+    var tickettitle = req.body.title;
+    var username = req.body.user;
+    var priority =req.body.priority;
+    var relatedchannels = req.body.related_channel_url
+    res.status(200).send("OK")
     Ticket.create(tickettitle,username,priority,relatedchannels, (ticket, error) => {
       if (error) {
         // Handle error.
         console.log(error);
     }
+    res.status(200).send({"message": "all good"})
     });
     
   })
   //connect user 
   var USER_ID = "939665";
   var ACCESS_TOKEN="026371109b6f10d35f69223599a1f458005be98a"
+  var sb;
   async function connectDesk() {
-    const params = {
-        appId: APP_ID,
-        // modules: [new GroupChannelModule()],
-    }
-    const sb = SendbirdChat.init(params);
     try {
-        await sb.connect(USER_ID);
-        SendBirdDesk.init(sb);
-        SendBirdDesk.authenticate(USER_ID, ACCESS_TOKEN,
-          (user, error) => {
-              if (error) {
-                  // Handle error.
-              }
-              // SendBirdDesk is now initialized,
-              // and the customer is authenticated and connected to the Sendbird server.
-              // The customer can message and chat with an agent.
-      });
-        // The customer is authenticated and connected to the Sendbird server.
-    } catch (error) {
-        // Handle error.
+  sb = new SendBird({appId: APP_ID});
+  await sb.connect(USER_ID)
+  console.log(sb.currentuser)
     }
-}
+    catch (error) {
+      console.error("Error connecting to SendBird:", error);
+    }
+  // SendbirdDesk.init(sb)
+  }
+    // const params = {
+    //     appId: APP_ID,
+    //     modules: [new GroupChannelModule()],
+    // }
+    // const sb = SendbirdChat.init(params);
+    // try {
+    //   console.log("not connected")
+
+    //   try {
+    //     const user = await sb.connect(USER_ID);
+    //     // The user is connected to the Sendbird server.
+    // } catch (err) {
+    //     // Handle error.
+    //     console.log(err)
+    // }
+    //     console.log("connected")
+    //     SendBirdDesk.init(sb);
+    //     SendBirdDesk.authenticate(USER_ID, ACCESS_TOKEN,
+    //       (user, error) => {
+    //           if (error) {
+    //               // Handle error.
+    //           }
+    //           console.log(user)
+    //           // SendBirdDesk is now initialized,
+    //           // and the customer is authenticated and connected to the Sendbird server.
+    //           // The customer can message and chat with an agent.
+    //   });
+    //     // The customer is authenticated and connected to the Sendbird server.
+    // } catch (error) {
+    //     // Handle error.
+    //     console.log("sendbird login")
+    //     console.log(error)
+    // }
+
 
