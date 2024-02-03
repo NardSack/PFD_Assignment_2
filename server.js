@@ -10,14 +10,13 @@ import { Console, error } from 'console';
 import { promises } from 'readline';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import SendbirdChat from '@sendbird/chat';
-import { GroupChannelModule  } from "@sendbird/chat/groupChannel"
-import SendBirdDesk, { Ticket } from 'sendbird-desk';
-import SendbirdDesk from "sendbird-desk";
+import SendbirdChat, { ConnectionHandler } from '@sendbird/chat';
+import { GroupChannelModule ,GroupChannelHandler } from "@sendbird/chat/groupChannel"
+import SendBirdDesk from 'sendbird-desk';
 /**
  * Install Sendbird
  */
-//import SendBird from "sendbird";
+import SendBird from "sendbird";
 const app = express();
 const PORT = process.env.PORT || 3000;
 const __filename = fileURLToPath(import.meta.url);
@@ -29,6 +28,9 @@ var BOT_ID = 'bot1';
 const TOKEN = 'eb55f1c4e4118a422644b97f0e62ba1f39014649';
 const ENTRYPOINT = 'https://api-AD791A35-62CA-4E37-A490-79C7368C5D77.sendbird.com/v3/bots';
 
+//dataset
+var USER_ID="939665";
+var accesstoken = "026371109b6f10d35f69223599a1f458005be98a";
 // Serve static files from the root folder
 app.use(express.static(__dirname));
 
@@ -42,6 +44,7 @@ app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
     // Running the connectDesk() function.
 console.log("Start code");
+console.log(USER_ID);
 connectDesk(USER_ID);
 
 });
@@ -129,10 +132,8 @@ app.post("/new_ticket_webhook", async (req, res) => {
     }
   }
 
-//dataset
-var USER_ID="939665";
-var accesstoken = "026371109b6f10d35f69223599a1f458005be98a";
-//var sb = new SendBird({appId: APP_ID});
+
+var sb = new SendBird({appId: APP_ID});
 
 //connecttoSB(userid,accesstoken);
   //connect to sendbird
@@ -161,33 +162,65 @@ var accesstoken = "026371109b6f10d35f69223599a1f458005be98a";
 async function connectDesk(USER_ID) {
     console.log(APP_ID)
     console.log("AD791A35-62CA-4E37-A490-79C7368C5D77")
-    const sb = SendbirdChat.init({
-        appId: APP_ID,
-        modules: [new GroupChannelModule()],
-    })
-    console.log(sb)
-    console.log("end here")
-    try {
-    const l=await SendbirdDesk.init(sb)
-    console.log(l)
-    }
-    catch (err)
-    {console.log(err)}
-    console.log("end here 2 2")
+    // const sb = SendBird.init({
+    //     appId: APP_ID,
+    //     modules: [new GroupChannelModule()],
+    // })
+    
+    // const sb = SendbirdChat.init({
+    //   appId : APP_ID,
+    //   modules: [
+    //     new GroupChannelModule()
+    //   ]
+    // });
+    // //console.log(sb)
+    // var handlerId="testingone123"
+    // sb.groupChannel.addGroupChannelHandler(handlerId, new GroupChannelHandler({
+    //   onMessageReceived: (channel, message) => {
+    //     // message received
+    //   }
+    // }));
+    
+    const user = sb.connect(USER_ID,accesstoken).then(res =>{console.log(res)});
+    // console.log(user);
+    var channelUrl="bot-channel-url";
+    const autoAccept = false;
+    await sb.setChannelInvitationPreference(autoAccept);
+    var otheruser=new SendBird({appId: APP_ID});
+    await otheruser.connect("bot1","ec128da9e68474e5c2f1297e1d76182de4a07988")
+    var inchannel = await otheruser.GroupChannel.getChannel(channelUrl);
+    var result = await inchannel.inviteWithUserIds([USER_ID])
+    console.log(result);
+    const channel = await sb.GroupChannel.getChannel(channelUrl);
+    try
+      {await channel.acceptInvitation();}
+      catch (err){}
+    var message = "pls work"
+    
+    await channel.sendUserMessage(message,function(res,error){})
+      // .onPending((message) => {
+      //   // message is pending to be sent
+      // })
+      // .onSucceeded((message) => {
+      //   // message sent
+      // })
+      // .onFailed((err, message) => {
+      //   // message not sent
+      // });
 
-    try {
+    // try {
         
-        const user = await sb.connect(USER_ID,accesstoken);
-        // The user is connected to Sendbird server.
-        console.log(user);
-        console.log("connected");
-        // const channel = await sb.groupChannel.createChannel(new GroupChannelParams());
-        // console.log(channel)
-      } catch (err) {
-        // Handle error.
-        console.log(accesstoken)
-        console.log(err)
-      }
+    //     const user = await sb.connect(USER_ID,accesstoken);
+    //     // The user is connected to Sendbird server.
+    //     console.log(user);
+    //     console.log("connected");
+    //     // const channel = await sb.groupChannel.createChannel(new GroupChannelParams());
+    //     // console.log(channel)
+    //   } catch (err) {
+    //     // Handle error.
+    //     console.log(accesstoken)
+    //     console.log(err)
+    //   }
     // try {
     //     console.log("Before connect");
     //     console.log(USER_ID);
